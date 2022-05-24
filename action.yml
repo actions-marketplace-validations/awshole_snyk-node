@@ -34,7 +34,6 @@ inputs:
   github_issue_assignee:
     description: "Expects a string value corresponding to the GitHub user to assign issues to if 'create_github_issues' is 'true'."
     required: false
-    required: false
   security_issues_labels:
     description: "The labels that should be applied to security-related GitHub Issues if 'create_github_issues' is 'true'."
     required: false
