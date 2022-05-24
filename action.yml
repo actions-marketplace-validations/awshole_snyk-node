@@ -114,7 +114,8 @@ runs:
               $splat.Add('licenseLabels', $licenseLabels)
             }
           power-snyk/scripts/Set-SnykGitHubIssues.ps1 @splat
-        } elseif ('${{ inputs.upload_sarif }}' -like 'true') {
+        } 
+        if ('${{ inputs.upload_sarif }}' -like 'true') {
           $headReference = '${{github.head_ref}}' # This is the source branch of the pull request in a workflow run. This property is only available when the event that triggers a workflow run is a pull_request
           if ($headReference -ne '') {
             $reference = $headReference 
