@@ -18,17 +18,22 @@ inputs:
     description: "Expects a string value corresponding to the Integration ID for a source control provider. This is required if 'integrate_with_snyk_platform' is 'true'."
     required: false
   repository:
-    description: "Expects the GitHub repository to import to the Snyk platform or post a GitHub Issue to. This is required if either 'integrate_with_snyk_platform' or 'create_github_issues' is 'true'."
+    description: "Expects the GitHub repository to import to the Snyk platform or post a GitHub Issue to. This is required if either 'integrate_with_snyk_platform', 'create_github_issues', or 'upload_sarif' is 'true'."
     required: false
   branch_name:
-    description: "Expects the GitHub repository branch name that should be imported into Snyk. This is required if 'integrate_with_snyk_platform' is 'true'."
+    description: "Expects the GitHub repository branch name that should be imported into Snyk. This is required if 'integrate_with_snyk_platform' or 'upload_sarif' is 'true'."
     required: false
   create_github_issues:
     description: 'If this is true, details of the Snyk scan will be posted to the Issues tab of a repository.'
     required: false
     default: false
+  upload_sarif:
+    description: 'If this is true, details of the Snyk scan will be uploaded as a SARIF file to the Security tab of a repository.'
+    required: false
+    default: false
   github_issue_assignee:
     description: "Expects a string value corresponding to the GitHub user to assign issues to if 'create_github_issues' is 'true'."
+    required: false
     required: false
   security_issues_labels:
     description: "The labels that should be applied to security-related GitHub Issues if 'create_github_issues' is 'true'."
@@ -43,7 +48,7 @@ runs:
   using: "composite"
   steps:
     - name: Checkout private tools
-      run: git clone https://${{ inputs.snyk_github_integration_token }}@github.com/awshole/power-snyk.git
+      run: git clone --branch main https://github.com/awshole/power-snyk.git
       shell: pwsh
     - name: Import to Snyk platform
       run: |
@@ -110,5 +115,21 @@ runs:
               $splat.Add('licenseLabels', $licenseLabels)
             }
           power-snyk/scripts/Set-SnykGitHubIssues.ps1 @splat
+        } elseif ('${{ inputs.upload_sarif }}' -like 'true') {
+          $headReference = '${{github.head_ref}}' # This is the source branch of the pull request in a workflow run. This property is only available when the event that triggers a workflow run is a pull_request
+          if ($headReference -ne '') {
+            $reference = $headReference 
+          } else {
+            $reference = '${{github.ref}}'
+          }
+          $splat = @{
+              dotSourceFilePath = 'power-snyk/functions/functions.ps1'    
+              pathToSnykIssues = 'snyk.json'
+              pathToDependencyFile = '${{ inputs.path_to_dependency_file }}'
+              gitHubToken = '${{ inputs.snyk_github_integration_token }}'
+              repository = '${{ inputs.repository }}'
+              branch = $reference
+            }
+          power-snyk/scripts/Set-SnykSarifOutput.ps1 @splat
         }
       shell: pwsh
