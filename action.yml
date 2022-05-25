@@ -41,7 +41,7 @@ inputs:
     description: "The labels that should be applied to license compliance-related GitHub Issues if 'create_github_issues' is 'true'."
     required: false 
   snyk_github_integration_token:
-    description: "GitHub token to use for posting issues. This is required if 'create_github_issues' is 'true'."
+    description: "GitHub token to use for posting issues. This is required if 'create_github_issues' or 'upload_sarif' is 'true'."
     required: false
 runs:
   using: "composite"
