@@ -1,5 +1,8 @@
 name: "Snyk source composition analysis"
 description: "This action leverages Snyk Open Source to scan dependencies for known license issues and vulnerabilities."
+branding:
+  icon: 'alert-circle'  
+  color: 'purple'
 inputs:
   snyk_api_key:
     description: "Expects a string value corresponding to the API key to use when accessing the Snyk organization."
