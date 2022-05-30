@@ -1,4 +1,4 @@
-name: "Snyk source composition analysis"
+name: "snyk-node"
 description: "This action leverages Snyk Open Source to scan dependencies for known license issues and vulnerabilities."
 branding:
   icon: 'alert-circle'  
