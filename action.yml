@@ -77,15 +77,12 @@ runs:
         npm install
       shell: pwsh
     - name: Install Snyk
-      run: |
-        wget -q https://github.com/snyk/snyk/releases/download/v1.518.0/snyk-linux
-        chmod +x snyk-linux
-        cp snyk-linux ~/snyk-linux -f
+      run: npm install snyk -g
       shell: bash
     - name: Authenticate and run Snyk test
       run: |
-        ~/snyk-linux auth ${{ inputs.snyk_api_key }}
-        ~/snyk-linux test --file=${{ inputs.path_to_dependency_file }} --skip-unresolved=true --json-file-output=snyk.json || true
+        snyk auth ${{ inputs.snyk_api_key }}
+        snyk test --file=${{ inputs.path_to_dependency_file }} --skip-unresolved=true --json-file-output=snyk.json || true
       shell: bash
     - name: Create GitHub Issues
       run: |
@@ -133,6 +130,6 @@ runs:
               repository = '${{ inputs.repository }}'
               branch = $reference
             }
-          power-snyk/scripts/Set-SnykSarifOutput.ps1 @splat
+          power-snyk/scripts/Set-SnykJavascriptSarifOutput.ps1 @splat
         }
       shell: pwsh
