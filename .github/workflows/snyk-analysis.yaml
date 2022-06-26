@@ -1,0 +1,107 @@
+name: snyk-analysis
+on:
+  workflow_call:
+    secrets:
+      SNYK_TOKEN:
+        description: 'The Snyk API token to use when testing projects.'
+        required: true
+    inputs:
+      PATH_TO_DEPENDENCY_FILE:
+        description: 'The path to the dependency file goes here (e.g., requirements.txt).'
+        required: true
+        type: string
+      INTEGRATE_WITH_SNYK_PLATFORM:
+        description: 'Specifies whether or not the repository should be imported into the Snyk platform.'
+        required: false
+        default: false
+        type: string 
+      SNYK_ORG_ID:
+        description: 'The Snyk organization ID to use when importing to the Snyk platform.'
+        required: false
+        default: false
+        type: string 
+      SNYK_INTEGRATION_ID:
+        description: 'The Snyk integration ID to use within a specific Snyk organization when importing into the Snyk platform.'
+        required: false
+        default: false
+        type: string 
+      REPOSITORY_BRANCH_TO_IMPORT_INTO_SNYK:
+        description: 'The branch of the repository that should be imported into Snyk for tracking of historical data (e.g., main). Required if INTEGRATE_WITH_SNYK_PLATFORM is true'
+        required: false
+        default: main
+        type: string 
+      UPLOAD_SARIF:
+        description: 'Specifies whether SARIF results are created so that they can be uploaded in a later step to the Security tab.'
+        required: false
+        type: string
+        default: 'true'
+      CREATE_GITHUB_ISSUE:
+        description: 'Specifies whether a GitHub Issue will be created.'
+        required: false
+        default: 'false'
+        type: string 
+      GITHUB_ISSUE_ASSIGNEE:
+        description: 'The GitHub user that issues should be assigned to goes here (e.g., awshole). Do not include if no user should be assigned.'
+        default: ''
+        required: false
+        type: string 
+      SECURITY_ISSUES_LABELS:
+        description: 'The labels that should be applied to security-related GitHub Issues goes here (e.g., "security, snyk, javascript")'
+        default: 'security, snyk, javascript'
+        required: false
+        type: string
+      LICENSE_ISSUES_LABELS:
+        description: 'The labels that should be applied to license-related GitHub Issues goes here (e.g., "license-compliance")'
+        default: 'license-compliance'
+        required: false
+        type: string
+      NODEJS_VERSION:
+        description: 'Version that should be used to configure the JavaScript environment'
+        default: '16.x'
+        required: false
+        type: string
+permissions:
+  id-token: write
+  contents: read
+  actions: read
+  security-events: write
+  statuses: write
+jobs:
+  javascript:
+    runs-on: ubuntu-latest
+    steps:     
+      - name: Checkout working repository
+        uses: actions/checkout@v2
+      - name: Node Version Specification
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ inputs.NODEJS_VERSION }}
+      - name: Conduct Snyk analysis
+        uses: awshole/snyk-node@main
+        with:
+          snyk_api_key: ${{ secrets.SNYK_TOKEN }}
+          snyk_org_id: ${{ inputs.SNYK_ORG_ID }}
+          snyk_integration_id: ${{ inputs.SNYK_INTEGRATION_ID }}
+          repository: ${{ github.repository }}
+          branch_name: ${{ inputs.REPOSITORY_BRANCH_TO_IMPORT_INTO_SNYK }}
+          path_to_dependency_file: ${{ inputs.PATH_TO_DEPENDENCY_FILE }}
+          snyk_github_integration_token: ${{ github.TOKEN }}
+          create_github_issues: ${{ inputs.CREATE_GITHUB_ISSUE }}
+          github_issue_assignee: ${{ inputs.GITHUB_ISSUE_ASSIGNEE }}
+          integrate_with_snyk_platform: ${{ inputs.INTEGRATE_WITH_SNYK_PLATFORM }}
+          upload_sarif: ${{ inputs.UPLOAD_SARIF }}
+          security_issues_labels: ${{ inputs.SECURITY_ISSUES_LABELS }}
+          license_issues_labels: ${{ inputs.LICENSE_ISSUES_LABELS }}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: snyk-sarif
+          path: snyk.sarif
+      - uses: actions/upload-artifact@v3
+        with:
+          name: snyk-json
+          path: snyk.json
+      - name: Upload SARIF file
+        if: ${{ inputs.UPLOAD_SARIF }} == 'true'
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: ${{ github.workspace }}/snyk.sarif
