@@ -20,7 +20,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
     - name: Snyk Analysis
-      uses: awshole/snyk-node@v1
+      uses: awshole/snyk-node@main
       with:
         snyk_api_key: ${{ secrets.SNYK_TOKEN }}
         path_to_dependency_file: package.json
@@ -51,3 +51,22 @@ passed to the action using `with`.
 | security_issues_labels        | false    |         | The labels that should be applied to security-related GitHub Issues if 'create_github_issues' is 'true'.                                                                                                |
 | license_issues_labels         | false    |         | The labels that should be applied to license compliance-related GitHub Issues if 'create_github_issues' is 'true'.                                                                                      |
 | snyk_github_integration_token | false    |         | GitHub token to use for posting issues. This is required if 'create_github_issues' or 'upload_sarif' is 'true'.                                                                                         |
+
+## Reusable Workflow 
+You can use the Action in the form of a re-usable workflow as follows:
+
+```yaml
+name: snyk-analysis-javascript 
+on:
+  workflow_dispatch:
+  push:
+    paths: [package.json]
+  pull_request:
+    paths: [package.json]
+jobs:     
+  snyk-analysis:
+    uses: awshole/snyk-node/.github/workflows/snyk-analysis.yaml@main
+    with:
+      path_to_dependency_file: package.json
+    secrets: inherit
+```
